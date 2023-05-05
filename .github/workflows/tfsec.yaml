@@ -27,7 +27,7 @@ jobs:
           sarif_file: tfsec.sarif
 
       - name: tfsec commenter for PR
-        uses: tfsec/tfsec-pr-commenter-action@main
+        uses: tfsec/tfsec-pr-commenter-action@v1.3.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB}}
           working_directory: ./_example/
