@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 jobs:
   call-workflow-tfsec:
-    uses: clouddrove/github-shared-workflows/.github/workflows/tfsec/@master
+    uses: clouddrove/github-shared-workflows/.github/workflows/tfsec/
     secrets: inherit
     with:
       working_directory: '.' 
