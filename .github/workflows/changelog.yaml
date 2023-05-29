@@ -6,7 +6,10 @@ on:
       branch:
         required: true
         type: string
-
+  push:
+    branches:
+      - master
+      
 jobs:
   create_changelog:
     runs-on: ubuntu-latest
