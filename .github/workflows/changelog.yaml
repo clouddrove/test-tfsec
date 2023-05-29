@@ -7,8 +7,8 @@ on:
         required: true
         type: string
   push:
-    branches:
-      - master
+    tags:
+      - "*"
       
 jobs:
   create_changelog:
