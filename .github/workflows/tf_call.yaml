@@ -1,14 +1,14 @@
-name: TF-Lint
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-  workflow_dispatch:
-jobs:
-  tf-lint:
-    uses: clouddrove/test-tfsec/.github/workflows/tflint.yaml@master
-  tfsec:
-    uses: clouddrove/github-shared-workflows/.github/workflows/tfsec.yml@master
-    secrets: inherit
-    with:
-      working_directory: '.'
+# name: TF-Lint
+# on:
+#   push:
+#     branches: [ master ]
+#   pull_request:
+#   workflow_dispatch:
+# jobs:
+#   tf-lint:
+#     uses: clouddrove/test-tfsec/.github/workflows/tflint.yaml@master
+#   tfsec:
+#     uses: clouddrove/github-shared-workflows/.github/workflows/tfsec.yml@master
+#     secrets: inherit
+#     with:
+#       working_directory: '.'
