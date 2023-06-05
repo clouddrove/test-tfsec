@@ -17,10 +17,11 @@ jobs:
         key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl') }}
 
     - uses: terraform-linters/setup-tflint@v3
+      with:
+        tflint_version: v0.44.1
     - uses: terraform-linters/tflint-load-config-action@v1
       name: Setup TFLint
       with:
-        tflint_version: v0.44.1
         source-repo: clouddrove/test-tfsec/.github/config/.tflint.hcl@feature/tf-static-check
         source-path: .github/config/.tflint.hcl
 
