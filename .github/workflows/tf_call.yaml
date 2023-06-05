@@ -5,5 +5,5 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
-  changelog:
+  lint:
     uses: clouddrove/test-tfsec/.github/workflows/tflint.yaml@master
