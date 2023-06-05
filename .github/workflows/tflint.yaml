@@ -1,16 +1,10 @@
-name: Lint
+name: TF-Lint
 on:
-  push:
-    branches: [ master ]
-  pull_request:
+  workflow_call:
 
 jobs:
   tflint:
     runs-on: ubuntu-latest
-
-    # strategy:
-    #   matrix:
-    #     os: [ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v3
