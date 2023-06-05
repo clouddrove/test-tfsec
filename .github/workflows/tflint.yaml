@@ -37,5 +37,5 @@ jobs:
     - uses: terraform-linters/tflint-load-config-action@v1
       with:
         source-repo: clouddrove/test-tfsec/.github/config/.tflint.hcl@feature/tf-static-check
-        source-path: .github/config/.tflint.hcl@feature/tf-static-check
+        source-path: .github/config/.tflint.hcl
     - run: tflint -f compact
