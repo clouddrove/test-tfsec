@@ -8,4 +8,4 @@ jobs:
   tf-lint:
     uses: clouddrove/test-tfsec/.github/workflows/tflint.yaml@feature/tf-static-check
     secrets:
-      GITHUB: ${{ secrets.GITHUB }}
+      GITHUB: ${{ secrets.GITHUB }} 
