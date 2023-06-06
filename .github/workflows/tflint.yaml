@@ -1,6 +1,10 @@
 name: TF-Lint
 on:
   workflow_call:
+    secrets:
+      GITHUB:
+        required: true
+        description: 'PAT of the user to run the jobs.'
 
 jobs:
   tflint:
@@ -17,9 +21,15 @@ jobs:
         key: ubuntu-latest-tflint-${{ hashFiles('.tflint.hcl') }}
 
     - uses: terraform-linters/setup-tflint@v3
-      name: Setup TFLint
       with:
         tflint_version: v0.44.1
+        github_token: ${{ secrets.GITHUB }}
+        
+    - uses: terraform-linters/tflint-load-config-action@v1
+      name: Setup TFLint
+      with:
+        source-repo: clouddrove/test-tfsec/
+        source-path: .github/config/.tflint.hcl
 
     - name: Show version
       run: tflint --version
@@ -33,9 +43,9 @@ jobs:
     - name: Run TFLint
       run: tflint --recursive --color --force -f compact
     
-    - uses: terraform-linters/setup-tflint@v3
-    - uses: terraform-linters/tflint-load-config-action@v1
-      with:
-        source-repo: clouddrove/test-tfsec/.github/config/.tflint.hcl@feature/tf-static-check
-        source-path: .github/config/.tflint.hcl@feature/tf-static-check
-    - run: tflint -f compact
+    # - uses: terraform-linters/setup-tflint@v3
+    # - uses: terraform-linters/tflint-load-config-action@v1
+    #   with:
+    #     source-repo: clouddrove/test-tfsec/.github/config/.tflint.hcl@feature/tf-static-check
+    #     source-path: .github/config/.tflint.hcl
+    # - run: tflint -f compact
