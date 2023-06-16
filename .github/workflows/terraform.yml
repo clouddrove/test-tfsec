@@ -33,6 +33,10 @@ jobs:
         with:
             creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
 
+      - name: Terraform Init
+        id: init
+        run: terraform -chdir=./deployment init   
+
     #   - name: 'Terraform Format fmt'
     #     id: fmt
     #     run: |
