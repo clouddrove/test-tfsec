@@ -37,18 +37,18 @@ jobs:
         id: init
         run: terraform -chdir=./deployment init   
 
-    #   - name: 'Terraform Format fmt'
-    #     id: fmt
-    #     run: |
-    #       cd deployment
-    #       terraform fmt --diff
+      - name: 'Terraform Format fmt'
+        id: fmt
+        run: |
+          cd deployment
+          terraform fmt --diff
 
-    #   - name: terraform validate
-    #     id: validate
-    #     uses: dflook/terraform-validate@v1
-    #     with:
-    #       path: "terraform/nonprod/us-west-2"
-    #       backend_config: token=${{ secrets.ROLE_ARN }}
+      - name: terraform validate
+        id: validate
+        uses: dflook/terraform-validate@v1
+        with:
+          path: "./deployment"
+          #backend_config: token=${{ secrets.ROLE_ARN }}
       
     #   - name: Validate failed
     #     if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
