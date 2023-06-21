@@ -50,11 +50,11 @@ jobs:
           path: "./deployment"
           #backend_config: token=${{ secrets.ROLE_ARN }}
       
-    #   - name: Validate failed
-    #     if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
-    #     run: |
-    #       echo "terraform validate failed"
-    #       echo "Reason: ${{ steps.validate.outputs.failure-reason }}"
+      - name: Validate failed
+        if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
+        run: |
+          echo "terraform validate failed"
+          echo "Reason: ${{ steps.validate.outputs.failure-reason }}"
 
     #   - name: 'Terraform initialization'
     #     id: init
@@ -68,41 +68,51 @@ jobs:
     #       -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
     #       -backend-config="secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
 
-    #   - name: Terraform Plan
-    #     id: plan
-    #     env:
-    #       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #       JSON_PLAN_FILE: tfplan.json
-    #     if: github.event_name == 'pull_request'
-    #     run: terraform -chdir=./terraform/nonprod/us-west-2 plan -out tfplan
-    #     continue-on-error: true
+      # - name: Terraform Plan
+      #   id: plan
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     JSON_PLAN_FILE: tfplan.json
+      #   if: github.event_name == 'pull_request'
+      #   run: terraform -chdir=./terraform/nonprod/us-west-2 plan -out tfplan
+      #   continue-on-error: true
       
-    #   # Save plan to artifacts  
-    #   - name: Publish Terraform Plan
-    #     uses: actions/upload-artifact@v3
-    #     with:
-    #       name: tfplan
-    #       path: tfplan
+      - name: Terraform Plan
+        id: plan
+        env:
+          # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          JSON_PLAN_FILE: tfplan.json
+        if: github.event_name == 'pull_request'
+        run: terraform -chdir=./deployment plan -out tfplan
+        continue-on-error: true
+      
+      # Save plan to artifacts  
+      - name: Publish Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: tfplan
 
-    #   # Create string output of Terraform Plan
-    #   - name: Create String Output
-    #     id: tf-plan-string
-    #     run: |
-    #       cd terraform/nonprod/us-west-2
-    #       TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+      # Create string output of Terraform Plan
+      - name: Create String Output
+        id: tf-plan-string
+        run: |
+          cd ./deployment
+          TERRAFORM_PLAN=$(terraform show -no-color tfplan)
           
-    #       delimiter="$(openssl rand -hex 8)"
-    #       echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
-    #       echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
-    #       echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
-    #       echo "" >> $GITHUB_OUTPUT
-    #       echo '```terraform' >> $GITHUB_OUTPUT
-    #       echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
-    #       echo '```' >> $GITHUB_OUTPUT
-    #       echo "</details>" >> $GITHUB_OUTPUT
-    #       echo "${delimiter}" >> $GITHUB_OUTPUT
-    #       echo "${{ steps.tf-plan-string.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
+          delimiter="$(openssl rand -hex 8)"
+          echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+          echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+          echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo '```terraform' >> $GITHUB_OUTPUT
+          echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          echo "</details>" >> $GITHUB_OUTPUT
+          echo "${delimiter}" >> $GITHUB_OUTPUT
+          echo "${{ steps.tf-plan-string.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
     
     #   - uses: actions/github-script@0.9.0
     #     if: github.event_name == 'pull_request'
