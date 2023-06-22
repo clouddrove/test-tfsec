@@ -2,10 +2,12 @@ name: 'terraform'
 on:
   pull_request:
 
+env:
+  dir: ./deployment
+     
 jobs:
-  ## Non-prod account Job
-  terraform-plan-nonprod:
-    name: 'Terraform Validate, Init and Plan for nonprod account'
+  terraform-plan:
+    name: 'Terraform Validate, Init and Plan'
     runs-on: ubuntu-latest
     environment: "env"
     steps:
@@ -147,6 +149,6 @@ jobs:
         if: steps.plan.outcome == 'failure'
         run: exit 1
 
-    # #   - name: Terraform Apply
-    # #     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    # #     run: terraform -chdir=./terraform/nonprod/us-west-2 apply -auto-approve
+      - name: Terraform Apply
+        #if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform -chdir=$dir apply -auto-approve
