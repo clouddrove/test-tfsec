@@ -3,14 +3,13 @@ on:
   pull_request:
 
 env:
-  dir: ./
+  dir: ./deployment
   env: test
      
 jobs:
   terraform-plan:
     name: 'Terraform Validate, Init and Plan'
     runs-on: ubuntu-latest
-    environment: $env
     steps:
       - name: 'Checkout'
         uses: actions/checkout@master
