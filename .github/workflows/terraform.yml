@@ -37,19 +37,19 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform -chdir=./deployment init   
+        run: terraform -chdir=$dir  init   
 
       - name: 'Terraform Format fmt'
         id: fmt
         run: |
-          cd deployment
+          cd $dir 
           terraform fmt --diff
 
       - name: terraform validate
         id: validate
         uses: dflook/terraform-validate@v1
         with:
-          path: "./deployment"
+          path: "$dir"
           #backend_config: token=${{ secrets.ROLE_ARN }}
       
       - name: Validate failed
@@ -87,7 +87,7 @@ jobs:
           # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JSON_PLAN_FILE: tfplan.json
         if: github.event_name == 'pull_request'
-        run: terraform -chdir=./deployment plan -out tfplan
+        run: terraform -chdir=$dir  plan -out tfplan
         continue-on-error: true
       
       # Save plan to artifacts  
@@ -101,7 +101,7 @@ jobs:
       - name: Create String Output
         id: tf-plan-string
         run: |
-          cd ./deployment
+          cd $dir 
           TERRAFORM_PLAN=$(terraform show -no-color tfplan)
           
           delimiter="$(openssl rand -hex 8)"
