@@ -37,7 +37,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform -chdir=$dir  init   
+        run: terraform -chdir=$dir  init  -var-file=vars/test.tfvars -backend-config="storage_account_name=testingtf" -backend-config="key=test.tfstate" -backend-config="resource_group_name=test-d"
 
       - name: 'Terraform Format fmt'
         id: fmt
@@ -47,7 +47,7 @@ jobs:
 
       - name: terraform validate
         id: validate
-        run: terraform -chdir=$dir validate
+        run: terraform -chdir=$dir validate -var-file=vars/test.tfvars
           #backend_config: token=${{ secrets.ROLE_ARN }}
       
       # - name: Validate failed
@@ -85,7 +85,7 @@ jobs:
           # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JSON_PLAN_FILE: tfplan.json
         if: github.event_name == 'pull_request'
-        run: terraform -chdir=$dir  plan -out tfplan
+        run: terraform -chdir=$dir  plan -var-file=vars/test.tfvars -out tfplan
         continue-on-error: true
       
       # Save plan to artifacts  
@@ -149,4 +149,4 @@ jobs:
 
       - name: Terraform Apply
         #if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform -chdir=$dir apply -auto-approve 
+        run: terraform -chdir=$dir apply -var-file=vars/test.tfvars -auto-approve 

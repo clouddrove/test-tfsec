@@ -17,6 +17,12 @@ provider "azurerm" {
 #   lock_level            = "CanNotDelete"
 # }
 
+terraform {
+  backend "azurerm" {
+    container_name = "terraform"
+  }
+}
+
 module "resource-group" {
   source  = "clouddrove/resource-group/azure"
   version = "1.0.2"
@@ -31,3 +37,4 @@ module "resource-group" {
   resource_lock_enabled = false
   lock_level            = "CanNotDelete"
 }
+
