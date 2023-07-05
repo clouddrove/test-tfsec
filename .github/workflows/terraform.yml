@@ -49,7 +49,7 @@ jobs:
         id: validate
         uses: dflook/terraform-validate@v1
         with:
-          path: ./deployment
+          path: $dir 
           #backend_config: token=${{ secrets.ROLE_ARN }}
       
       - name: Validate failed
