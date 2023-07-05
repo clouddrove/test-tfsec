@@ -21,7 +21,7 @@ module "resource-group" {
   source  = "clouddrove/resource-group/azure"
   version = "1.0.2"
 
-  environment = "tested"
+  environment = var.environment
   label_order = ["name", "environment", ]
 
   name     = "example"
