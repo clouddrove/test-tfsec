@@ -34,7 +34,7 @@ jobs:
         uses: azure/login@v1
         with:
             creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
-
+      
       - name: Terraform Init
         id: init
         run: terraform -chdir=$dir  init  -var-file=vars/test.tfvars -backend-config="storage_account_name=testingtf" -backend-config="key=test.tfstate" -backend-config="resource_group_name=test-d"
