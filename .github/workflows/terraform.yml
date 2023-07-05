@@ -50,11 +50,11 @@ jobs:
         run: terraform -chdir=$dir validate
           #backend_config: token=${{ secrets.ROLE_ARN }}
       
-      - name: Validate failed
-        if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
-        run: |
-          echo "terraform validate failed"
-          echo "Reason: ${{ steps.validate.outputs.failure-reason }}"
+      # - name: Validate failed
+      #   if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
+      #   run: |
+      #     echo "terraform validate failed"
+      #     echo "Reason: ${{ steps.validate.outputs.failure-reason }}"
 
     #   - name: 'Terraform initialization'
     #     id: init
