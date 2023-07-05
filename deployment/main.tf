@@ -28,6 +28,6 @@ module "resource-group" {
   location = "North Europe"
 
   #resource lock
-  resource_lock_enabled = 
+  resource_lock_enabled = test
   lock_level            = "CanNotDelete"
 }
