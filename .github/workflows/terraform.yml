@@ -10,7 +10,7 @@ jobs:
   terraform-plan:
     name: 'Terraform Validate, Init and Plan'
     runs-on: ubuntu-latest
-    environment: $test
+    environment: $env
     steps:
       - name: 'Checkout'
         uses: actions/checkout@master
@@ -50,7 +50,7 @@ jobs:
         id: validate
         uses: dflook/terraform-validate@v1
         with:
-          path: $dir
+          path: ./deployment
           #backend_config: token=${{ secrets.ROLE_ARN }}
       
       - name: Validate failed
