@@ -1,11 +1,57 @@
-name: 'terraform'
-on:
-  pull_request:
+name: terraform
 
-env:
-  dir: ./deployment
-  env: test
-     
+on:
+  workflow_call:
+  # inputs can be defined to use during workflow call. 
+    inputs:
+      working_directory:
+        description: 'Directory where complete example exist of the module.'
+        required: false
+        type: string
+        default: './'
+      env:
+        description: 'test'
+        required: false
+        type: string 
+        default: 'test'
+      provider:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: true
+        type: string 
+        default: 'aws'
+      aws-region:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+        type: string
+    secrets:
+      ################################################################
+      ##AWS cloud creds
+      ###############################################################
+      aws-access-key-id: 
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      aws-secret-access-key:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AWS-ROLE_ARN:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      ################################################################
+      ##Azure cloud Authentication
+      ###############################################################
+      AZURE_CLIENT_ID:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AZURE_CLIENT_SECRET:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AZURE_SUBSCRIPTION_ID:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AZURE_TENANT_ID:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+           
 jobs:
   terraform-plan:
     name: 'Terraform Validate, Init and Plan'
@@ -22,32 +68,34 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
       
-    #   - name: Configure AWS credentials
-    #     if: ${{ inputs.provider == 'aws' }}
-    #     uses: aws-actions/configure-aws-credentials@v2
-    #     with:
-    #       aws-access-key-id: ${{ secrets.aws-access-key-id }}
-    #       aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
-    #       aws-region: ${{ inputs.aws-region }}
+      - name: Configure AWS credentials
+        if: ${{ inputs.provider == 'aws' }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ inputs.aws-access-key-id }}
+          aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+          aws-region: ${{ inputs.aws-region }}
       
       - name: Az CLI login
+        if: ${{ inputs.provider == 'azure' }}
         uses: azure/login@v1
         with:
-            creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
+            creds: '{"clientId":"${{ inputs.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
       
       - name: Terraform Init
+        if: ${{ inputs.provider == 'azure' }}
         id: init
-        run: terraform -chdir=$dir  init  -var-file=vars/test.tfvars -backend-config="storage_account_name=testingtf" -backend-config="key=test.tfstate" -backend-config="resource_group_name=test-d"
+        run: terraform -chdir=${{ inputs.working_directory }}  init  -var-file=vars/test.tfvars -backend-config="storage_account_name=testingtf" -backend-config="key=test.tfstate" -backend-config="resource_group_name=test-d"
 
       - name: 'Terraform Format fmt'
         id: fmt
         run: |
-          cd $dir 
+          cd ${{ inputs.working_directory }}
           terraform fmt --diff
 
       - name: terraform validate
         id: validate
-        run: terraform -chdir=$dir validate -var-file=vars/test.tfvars
+        run: terraform -chdir=${{ inputs.working_directory }} validate -var-file=vars/test.tfvars
           #backend_config: token=${{ secrets.ROLE_ARN }}
       
       # - name: Validate failed
@@ -85,7 +133,7 @@ jobs:
           # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           JSON_PLAN_FILE: tfplan.json
         if: github.event_name == 'pull_request'
-        run: terraform -chdir=$dir  plan -var-file=vars/test.tfvars -out tfplan
+        run: terraform -chdir=${{ inputs.working_directory }}  plan -var-file=vars/test.tfvars -out tfplan
         continue-on-error: true
       
       # Save plan to artifacts  
@@ -99,7 +147,7 @@ jobs:
       - name: Create String Output
         id: tf-plan-string
         run: |
-          cd $dir 
+          cd ${{ inputs.working_directory }} 
           TERRAFORM_PLAN=$(terraform show -no-color tfplan)
           
           delimiter="$(openssl rand -hex 8)"
@@ -149,4 +197,4 @@ jobs:
 
       - name: Terraform Apply
         #if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform -chdir=$dir apply -var-file=vars/test.tfvars -auto-approve 
+        run: terraform -chdir=${{ inputs.working_directory }} apply -var-file=vars/test.tfvars -auto-approve 
