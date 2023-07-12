@@ -1,0 +1,205 @@
+name: terraform
+
+on:
+  workflow_call:
+  # inputs can be defined to use during workflow call. 
+    inputs:
+      working_directory:
+        description: 'Directory where complete example exist of the module.'
+        required: false
+        type: string
+        default: './'
+      env:
+        description: 'test'
+        required: false
+        type: string 
+        default: 'test'
+      provider:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: true
+        type: string 
+        default: 'aws'
+      aws-region:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+        type: string
+    secrets:
+      ################################################################
+      ##AWS cloud creds
+      ###############################################################
+      aws-access-key-id: 
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      aws-secret-access-key:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AWS-ROLE_ARN:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      ################################################################
+      ##Azure cloud Authentication
+      ###############################################################
+      AZURE_CLIENT_ID:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AZURE_CLIENT_SECRET:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AZURE_SUBSCRIPTION_ID:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+      AZURE_TENANT_ID:
+        description: 'Provide any cloud provider i.e aws,azure,do,gcp'
+        required: false
+           
+jobs:
+  terraform-plan:
+    name: 'Terraform Validate, Init and Plan'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@master
+
+    #   - name: 'Install dependancies'
+    #     run: |
+    #       sudo apt-get install jq awscli -y
+    #       alias convert_report="jq -r '([.resource_changes[]?.change.actions?]|flatten)|{\"create\":(map(select(.==\"create\"))|length),\"update\":(map(select(.==\"update\"))|length),\"delete\":(map(select(.==\"delete\"))|length)}'"
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+      
+      - name: Configure AWS credentials
+        if: ${{ inputs.provider == 'aws' }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.aws-access-key-id }}
+          aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+          aws-region: ${{ inputs.aws-region }}
+      
+      - name: Az CLI login
+        if: ${{ inputs.provider == 'azure' }}
+        uses: azure/login@v1
+        with:
+            creds: '{"clientId":"${{ inputs.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+      
+      - name: Terraform Init
+        if: ${{ inputs.provider == 'azure' }}
+        id: azure-init
+        run: terraform -chdir=${{ inputs.working_directory }}  init  -var-file=vars/test.tfvars -backend-config="storage_account_name=testingtf" -backend-config="key=test.tfstate" -backend-config="resource_group_name=test-d"
+      
+      - name: 'Terraform initialization'
+        if: ${{ inputs.provider == 'aws' }}
+        id: aws-init
+        env:
+          backend_config: token=${{ secrets.ROLE_ARN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+         cd ${{ inputs.working_directory }}
+         terraform init -var-file vars/vxdv.tfvars\
+         -backend-config="key=terraform/vxdv.tfstate"\
+         -backend-config="bucket=workflow-tf"
+
+      - name: 'Terraform Format fmt'
+        id: fmt
+        run: |
+          cd ${{ inputs.working_directory }}
+          terraform fmt --diff
+
+      - name: terraform validate
+        id: validate
+        run: |
+          cd ${{ inputs.working_directory }}
+          terraform validate
+        #backend_config: token=${{ secrets.ROLE_ARN }}
+      
+      # - name: Validate failed
+      #   if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
+      #   run: |
+      #     echo "terraform validate failed"
+      #     echo "Reason: ${{ steps.validate.outputs.failure-reason }}"
+
+      
+
+      # - name: Terraform Plan
+      #   id: plan
+      #   env:
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     JSON_PLAN_FILE: tfplan.json
+      #   if: github.event_name == 'pull_request'
+      #   run: terraform -chdir=./terraform/nonprod/us-west-2 plan -out tfplan
+      #   continue-on-error: true
+      
+      - name: Terraform Plan
+        id: plan
+        env:
+          # AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          # AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          JSON_PLAN_FILE: tfplan.json
+        if: github.event_name == 'pull_request'
+        run: terraform -chdir=${{ inputs.working_directory }}  plan -var-file=vars/test.tfvars -out tfplan
+        continue-on-error: true
+      
+      # Save plan to artifacts  
+      - name: Publish Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan
+          path: tfplan
+
+      # Create string output of Terraform Plan
+      - name: Create String Output
+        id: tf-plan-string
+        run: |
+          cd ${{ inputs.working_directory }} 
+          TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+          
+          delimiter="$(openssl rand -hex 8)"
+          echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+          echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+          echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo '```terraform' >> $GITHUB_OUTPUT
+          echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          echo "</details>" >> $GITHUB_OUTPUT
+          echo "${delimiter}" >> $GITHUB_OUTPUT
+          echo "${{ steps.tf-plan-string.outputs.summary }}" >> $GITHUB_STEP_SUMMARY
+    
+      - uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        env:
+          SUMMARY: "${{ steps.tf-plan-string.outputs.summary }}"
+        with:
+          github-token: ${{ secrets.GITHUB }}
+          script: |
+            const output = `#### Terraform Format and Style for "main" 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.SUMMARY}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        #if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform -chdir=${{ inputs.working_directory }} apply -var-file=vars/test.tfvars -auto-approve 

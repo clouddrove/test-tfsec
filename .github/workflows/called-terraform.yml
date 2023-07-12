@@ -1,0 +1,17 @@
+name:  terraform-call
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+jobs:
+  tf-lint:
+    uses: clouddrove/test-tfsec/.github/workflows/terraform.yml@feat/tf
+    with:  
+     working_directory: ./deployment
+     provider: aws
+     aws-region: us-east-1
+    secrets:
+      aws-access-key-id: ${{ secrets.TEST_AWS_ACCESS_KEY}}
+      aws-secret-access-key: ${{ secrets.TEST_AWS_ACCESS_SECRET_KEY }}
