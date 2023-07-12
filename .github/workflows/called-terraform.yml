@@ -1,4 +1,4 @@
-name:  TF-Lint
+name:  terraform-call
 on:
   push:
     branches: [ "main", "master" ]
