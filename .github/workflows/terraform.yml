@@ -84,8 +84,22 @@ jobs:
       
       - name: Terraform Init
         if: ${{ inputs.provider == 'azure' }}
-        id: init
+        id: azure-init
         run: terraform -chdir=${{ inputs.working_directory }}  init  -var-file=vars/test.tfvars -backend-config="storage_account_name=testingtf" -backend-config="key=test.tfstate" -backend-config="resource_group_name=test-d"
+      
+      - name: 'Terraform initialization'
+        if: ${{ inputs.provider == 'aws' }}
+        id: aws-init
+        env:
+          backend_config: token=${{ secrets.ROLE_ARN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+         cd ${{ inputs.working_directory }}
+         terraform init\
+         -var-file vars/vxdv.tfvars\
+         -backend-config="key=terraform/vxdv.tfstate"\
+         -backend-config="bucket=workflow-tf"
 
       - name: 'Terraform Format fmt'
         id: fmt
@@ -106,17 +120,7 @@ jobs:
       #     echo "terraform validate failed"
       #     echo "Reason: ${{ steps.validate.outputs.failure-reason }}"
 
-    #   - name: 'Terraform initialization'
-    #     id: init
-    #     env:
-    #       backend_config: token=${{ secrets.ROLE_ARN }}
-    #       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #     run: |
-    #       cd terraform/nonprod/us-west-2
-    #       terraform init \
-    #       -backend-config="access_key=${{ secrets.AWS_ACCESS_KEY_ID }}" \
-    #       -backend-config="secret_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+      
 
       # - name: Terraform Plan
       #   id: plan
