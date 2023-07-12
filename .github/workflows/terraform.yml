@@ -96,8 +96,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
          cd ${{ inputs.working_directory }}
-         terraform init\
-         -var-file vars/vxdv.tfvars\
+         terraform init -var-file vars/vxdv.tfvars\
          -backend-config="key=terraform/vxdv.tfstate"\
          -backend-config="bucket=workflow-tf"
 
