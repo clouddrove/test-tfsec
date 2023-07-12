@@ -95,8 +95,10 @@ jobs:
 
       - name: terraform validate
         id: validate
-        run: terraform -chdir=${{ inputs.working_directory }} validate -var-file=vars/test.tfvars
-          #backend_config: token=${{ secrets.ROLE_ARN }}
+        run: |
+          cd ${{ inputs.working_directory }}
+          terraform validate
+        #backend_config: token=${{ secrets.ROLE_ARN }}
       
       # - name: Validate failed
       #   if: ${{ failure() && steps.validate.outputs.failure-reason == 'validate-failed' }}
